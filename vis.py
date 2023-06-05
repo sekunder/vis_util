@@ -980,13 +980,21 @@ def display_edge_list_as_matrix(edge_df, u_col, v_col, wt_col=None,
 ################################################################################
 
 
-def circle_layout(nodes, c=[0, 0], r=1.0, theta_offset=0.0):
+def circle_layout(nodes, c=[0, 0], r=1.0, theta_offset=0.0, spacing="uniform", node_radius=None):
     """Given a node dataframe (i.e. treating the index of the dataframe as the nodes of a graph)
-    return a dict of node: (x,y) pairs that puts them on a circle centered at c with radius r"""
+    return a dict of node: (x,y) pairs that puts them on a circle centered at c with radius r
+    
+    If `spacing='uniform'` or `node_radius=None`, nodes are arranged uniformly around the circle.
+    If `spacing='proportional' and `node_radius` specifies a column of `nodes`, node spacing
+    will space the nodes around the circle so that each gets space proportional to its radius"""
     if nodes.shape[0] == 1:
         return {nodes.index[0]: (c[0], c[1])}
     c = np.array(c)
-    thetas = np.linspace(0, 2 * np.pi, nodes.shape[0] + 1)[:-1] + theta_offset
+    if spacing == 'uniform' or node_radius == None:
+        thetas = np.linspace(0, 2 * np.pi, nodes.shape[0] + 1)[:-1] + theta_offset
+    else:
+        proportion = np.array(nodes[node_radius] * 2 * np.pi / nodes[node_radius].sum())
+        thetas = np.cumsum(proportion) - proportion / 2
     return dict(zip(nodes.index, zip(c[0] + r * np.cos(thetas), c[1] + r * np.sin(thetas))))
 
 
